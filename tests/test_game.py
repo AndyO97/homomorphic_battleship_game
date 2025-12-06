@@ -74,9 +74,10 @@ class TestGameLogic:
         x, y = ship_cell
         
         # Alice guesses the ship location
-        is_hit, ship_sunk = game.make_guess("Alice", x, y)
+        is_hit, ship_sunk, is_duplicate = game.make_guess("Alice", x, y)
         
         assert is_hit
+        assert not is_duplicate
         assert (x, y) in bob_board.guesses
     
     def test_make_guess_miss(self, game_setup):
@@ -97,9 +98,10 @@ class TestGameLogic:
         x, y = water_cell
         
         # Alice guesses water
-        is_hit, ship_sunk = game.make_guess("Alice", x, y)
+        is_hit, ship_sunk, is_duplicate = game.make_guess("Alice", x, y)
         
         assert not is_hit
+        assert not is_duplicate
     
     def test_ship_sinking(self, game_setup):
         """Test detecting when a ship sinks."""
@@ -117,11 +119,12 @@ class TestGameLogic:
         
         # Hit the final cell
         x, y = ship_coords[-1]
-        is_hit, ship_sunk = game.make_guess("Alice", x, y)
+        is_hit, ship_sunk, is_duplicate = game.make_guess("Alice", x, y)
         
         assert is_hit
         assert ship_sunk == target_ship.name
         assert target_ship.is_sunk()
+        assert not is_duplicate
     
     def test_game_over_condition(self, game_setup):
         """Test that game ends when all ships are sunk."""

@@ -75,13 +75,16 @@ def test_manual_placement():
     print(f"[OK] Ship retrieval works: Found {ship_at_0_0.name} at (0, 0)")
     
     # Test hit recording
-    board.record_hit_on_board(0, 0)
+    is_hit, is_dup = board.record_hit_on_board(0, 0)
     assert ship1.hits == 1, "Should have 1 hit"
+    assert is_hit, "Should be a hit"
+    assert not is_dup, "Should not be a duplicate"
     print(f"[OK] Hit recording works")
     
     # Test water cell (no ship)
-    is_hit = board.record_hit_on_board(3, 3)
+    is_hit, is_dup = board.record_hit_on_board(3, 3)
     assert not is_hit, "Water cell should be a miss"
+    assert not is_dup, "Should not be a duplicate"
     print(f"[OK] Water cell detection works")
     
     # Test game status

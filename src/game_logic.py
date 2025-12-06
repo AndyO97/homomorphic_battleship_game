@@ -57,7 +57,7 @@ class GameLogic:
         # Game state
         self.game_state = GameState()
     
-    def make_guess(self, guessing_player: str, x: int, y: int) -> Tuple[bool, Optional[str]]:
+    def make_guess(self, guessing_player: str, x: int, y: int) -> Tuple[bool, Optional[str], bool]:
         """
         Process a guess from one player against the opponent's board.
         
@@ -67,7 +67,7 @@ class GameLogic:
             y: Y coordinate (0-9)
             
         Returns:
-            Tuple of (is_hit, ship_name_if_sunk)
+            Tuple of (is_hit, ship_name_if_sunk, is_duplicate)
         """
         if self.game_state.game_over:
             raise RuntimeError("Game is already over!")
@@ -104,11 +104,11 @@ class GameLogic:
         is_hit = check_hit(decrypted_result)
         
         # Record the hit on the target board
-        target_board.record_hit_on_board(x, y)
+        is_hit, is_duplicate = target_board.record_hit_on_board(x, y)
         
         # Check if a ship was sunk
         ship_sunk_name = None
-        if is_hit:
+        if is_hit and not is_duplicate:
             ship = target_board.get_ship_at(x, y)
             if ship and ship.is_sunk():
                 ship_sunk_name = ship.name
@@ -124,10 +124,11 @@ class GameLogic:
             "player": guessing_player,
             "coordinate": (x, y),
             "is_hit": is_hit,
-            "ship_sunk": ship_sunk_name
+            "ship_sunk": ship_sunk_name,
+            "is_duplicate": is_duplicate
         })
         
-        return is_hit, ship_sunk_name
+        return is_hit, ship_sunk_name, is_duplicate
     
     def validate_guess(self, x: int, y: int) -> bool:
         """

@@ -161,8 +161,9 @@ class TestBoard:
         
         assert water_cell is not None
         x, y = water_cell
-        is_hit = board.record_hit_on_board(x, y)
+        is_hit, is_duplicate = board.record_hit_on_board(x, y)
         assert not is_hit
+        assert not is_duplicate
     
     def test_record_hit_on_ship(self):
         """Test recording a hit on a ship."""
@@ -178,8 +179,9 @@ class TestBoard:
         
         assert ship_cell is not None
         x, y = ship_cell
-        is_hit = board.record_hit_on_board(x, y)
+        is_hit, is_duplicate = board.record_hit_on_board(x, y)
         assert is_hit
+        assert not is_duplicate
     
     def test_all_ships_sunk(self):
         """Test checking if all ships are sunk."""

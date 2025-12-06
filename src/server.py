@@ -67,7 +67,7 @@ class GameServer:
             self.game_logic.validate_guess(x, y)
             
             # Process the guess through homomorphic logic
-            is_hit, ship_sunk = self.game_logic.make_guess(player_name, x, y)
+            is_hit, ship_sunk, is_duplicate = self.game_logic.make_guess(player_name, x, y)
             
             # Prepare response
             response = {
@@ -76,6 +76,7 @@ class GameServer:
                 "coordinate": (x, y),
                 "is_hit": is_hit,
                 "ship_sunk": ship_sunk,
+                "is_duplicate": is_duplicate,
                 "game_over": self.game_logic.game_state.game_over,
                 "winner": self.game_logic.game_state.winner
             }

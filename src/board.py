@@ -310,7 +310,7 @@ class Board:
             encrypted_board[coord] = public_key.encrypt(value)
         return encrypted_board
     
-    def record_hit_on_board(self, x: int, y: int) -> bool:
+    def record_hit_on_board(self, x: int, y: int) -> Tuple[bool, bool]:
         """
         Record a hit at the specified coordinate.
         
@@ -319,22 +319,28 @@ class Board:
             y: Y coordinate
             
         Returns:
-            True if this was a hit (on a ship), False if it was a miss
+            Tuple of (is_hit, is_duplicate)
+            - is_hit: True if coordinate contains a ship, False if water
+            - is_duplicate: True if coordinate was already guessed before
         """
         if not (0 <= x < self.BOARD_SIZE and 0 <= y < self.BOARD_SIZE):
             raise ValueError(f"Coordinate ({x}, {y}) out of bounds")
         
+        # Check if this coordinate was already guessed
+        is_duplicate = (x, y) in self.guesses
         self.guesses.add((x, y))
+        
         is_hit = self.board[(x, y)] == 1
         
-        if is_hit:
+        # Only record hit on ship if this is not a duplicate guess
+        if is_hit and not is_duplicate:
             # Find which ship was hit and record the hit
             for ship in self.ships:
                 if (x, y) in ship.coordinates:
                     ship.record_hit()
                     break
         
-        return is_hit
+        return is_hit, is_duplicate
     
     def get_ship_at(self, x: int, y: int) -> Optional[Ship]:
         """

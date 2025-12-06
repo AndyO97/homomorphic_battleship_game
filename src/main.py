@@ -131,6 +131,12 @@ def process_guess_result(result: dict, player_name: str, opponent_name: str) -> 
         return
     
     x, y = result["coordinate"]
+    is_duplicate = result.get("is_duplicate", False)
+    
+    if is_duplicate:
+        print(f"\n[Server Result] Duplicate guess at ({x}, {y}) - Already attacked this location!")
+        print(f"  No damage dealt. Try a different coordinate.")
+        return
     
     if result["is_hit"]:
         print(f"\n[Server Result] {player_name} HITS {opponent_name}'s board at ({x}, {y})!")
