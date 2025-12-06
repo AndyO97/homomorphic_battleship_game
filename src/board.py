@@ -26,6 +26,112 @@ class Ship:
     def record_hit(self) -> None:
         """Record a hit on this ship."""
         self.hits += 1
+    
+    @staticmethod
+    def is_valid_line(coords: List[Tuple[int, int]]) -> Tuple[bool, Optional[str]]:
+        """
+        Check if coordinates form a valid continuous line (horizontal or vertical).
+        
+        Args:
+            coords: List of (x, y) coordinate tuples
+            
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        if len(coords) < 2:
+            return True, None
+        
+        # Get first two coordinates to determine direction
+        x1, y1 = coords[0]
+        x2, y2 = coords[1]
+        
+        # Check if horizontal or vertical
+        if x1 == x2:
+            # Vertical line - all x coordinates must be the same
+            direction = "vertical"
+            if not all(x == x1 for x, y in coords):
+                return False, f"Ship must be in a straight vertical line. All x coordinates must be {x1}."
+            
+            # Check for continuous line (no gaps)
+            y_coords = sorted([y for x, y in coords])
+            for i in range(1, len(y_coords)):
+                if y_coords[i] != y_coords[i-1] + 1:
+                    return False, f"Ship must be continuous with no gaps. Y coordinates should be consecutive."
+        
+        elif y1 == y2:
+            # Horizontal line - all y coordinates must be the same
+            direction = "horizontal"
+            if not all(y == y1 for x, y in coords):
+                return False, f"Ship must be in a straight horizontal line. All y coordinates must be {y1}."
+            
+            # Check for continuous line (no gaps)
+            x_coords = sorted([x for x, y in coords])
+            for i in range(1, len(x_coords)):
+                if x_coords[i] != x_coords[i-1] + 1:
+                    return False, f"Ship must be continuous with no gaps. X coordinates should be consecutive."
+        
+        else:
+            # Neither horizontal nor vertical
+            return False, "Ship must be placed either horizontally or vertically in a straight line."
+        
+        return True, None
+    
+    @staticmethod
+    def get_valid_range(coords: List[Tuple[int, int]], size: int) -> str:
+        """
+        Get the valid range for remaining coordinates of a ship.
+        
+        Args:
+            coords: List of coordinates already placed
+            size: Total size of the ship
+            
+        Returns:
+            String describing valid range for next coordinate
+        """
+        if len(coords) < 1:
+            return "Any coordinate on the board (0-9 for x and y)"
+        
+        if len(coords) == 1:
+            x1, y1 = coords[0]
+            return f"Can be horizontal (same y={y1}, x differs) or vertical (same x={x1}, y differs)"
+        
+        # After 2+ coordinates, direction is determined
+        x1, y1 = coords[0]
+        x2, y2 = coords[1]
+        
+        remaining = size - len(coords)
+        
+        if x1 == x2:
+            # Vertical
+            y_coords = sorted([y for x, y in coords])
+            min_y = y_coords[0] - remaining
+            max_y = y_coords[-1] + remaining
+            min_y = max(min_y, 0)
+            max_y = min(max_y, 9)
+            
+            # Next coordinate must continue the line
+            if y_coords[-1] + 1 <= 9:
+                next_valid = f"y must be {y_coords[-1] + 1} (continuing from current line)"
+            else:
+                next_valid = f"Line is complete at this end, no more room"
+            
+            return f"Vertical line: x={x1}, {next_valid}"
+        
+        else:  # y1 == y2
+            # Horizontal
+            x_coords = sorted([x for x, y in coords])
+            min_x = x_coords[0] - remaining
+            max_x = x_coords[-1] + remaining
+            min_x = max(min_x, 0)
+            max_x = min(max_x, 9)
+            
+            # Next coordinate must continue the line
+            if x_coords[-1] + 1 <= 9:
+                next_valid = f"x must be {x_coords[-1] + 1} (continuing from current line)"
+            else:
+                next_valid = f"Line is complete at this end, no more room"
+            
+            return f"Horizontal line: y={y1}, {next_valid}"
 
 
 class Board:
@@ -102,13 +208,16 @@ class Board:
         The player is prompted to enter coordinates for each ship in the format "x y"
         repeated for each cell of the ship. Validates that:
         - Coordinates are within bounds (0-9)
+        - Ships form continuous horizontal or vertical lines
         - No overlaps with existing ships
+        - No duplicate coordinates within a ship
         - Each ship has the correct size
         """
         self.ships = []
         print(f"\n{self.player_name}'s Manual Ship Placement")
         print("=" * 60)
         print("Enter coordinates for each cell of your ships (format: x y)")
+        print("Ships must be placed in a straight line (horizontal or vertical)")
         print("Board coordinates range from 0-9 for both x and y")
         print()
         
@@ -142,11 +251,22 @@ class Board:
                     
                     # Validate no overlap with existing ships
                     if self.board[(x, y)] != 0:
-                        print(f"  Coordinate ({x}, {y}) already occupied. Please enter a different one.")
+                        print(f"  Coordinate ({x}, {y}) already occupied by another ship. Please enter a different one.")
+                        continue
+                    
+                    # Add to temporary list for validation
+                    temp_coordinates = coordinates + [(x, y)]
+                    
+                    # Validate that coordinates form a continuous line
+                    is_valid, error_msg = Ship.is_valid_line(temp_coordinates)
+                    if not is_valid:
+                        print(f"  Error: {error_msg}")
+                        valid_range = Ship.get_valid_range(coordinates, size)
+                        print(f"  Valid range for next coordinate: {valid_range}")
                         continue
                     
                     coordinates.append((x, y))
-                    print(f"  [OK] {len(coordinates)}/{size} cells placed")
+                    print(f"  [OK] {len(coordinates)}/{size} cells placed at ({x}, {y})")
                 
                 except ValueError:
                     print("  Invalid input. Please enter two integers (0-9).")
@@ -156,7 +276,7 @@ class Board:
                 self.board[coord] = 1
             ship.coordinates = coordinates
             self.ships.append(ship)
-            print(f"  [OK] {name} placed at coordinates: {coordinates}")
+            print(f"  [OK] {name} placed successfully at: {coordinates}")
         
         print(f"\n{self.player_name}'s board setup complete!")
     
