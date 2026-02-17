@@ -25,7 +25,7 @@ This project implements a secure variant of the classic Battleship game using cr
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/AndyO97/homomorphic_battleship_game.git
 cd homomorphic-battleship
 ```
 
